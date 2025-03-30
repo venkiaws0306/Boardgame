@@ -1,28 +1,60 @@
 pipeline {
-    agent {label 'slave-1'}
+    agent any
     
     tools {
         maven 'maven3'
-        jdk 'jdk17'
+    }
+    
+    environment{
+        SCANNER_HOME = tool 'sonar-scanner'
     }
 
-    stages {     
-        stage('Compile') {
+    stages {
+        stage('Git checkout/SCM') {
             steps {
-               sh "mvn compile"
+                 git branch: 'main', url: 'https://github.com/venkiaws0306/Boardgame.git'
             }
         }
         
-        stage('Test') {
+        stage('complile') {
             steps {
-                sh "mvn test"
+                bat "mvn compiler:compile"
             }
         }
         
-        stage('Build') {
+        stage('test') {
             steps {
-                sh "mvn package"
+                bat "mvn test"
             }
         }
+        
+        stage('build') {
+            steps {
+               bat "mvn package"
+            }
+        }
+        
+        stage('SonarQube') {
+            steps {
+               withSonarQubeEnv('sonar') {
+                   bat "%SCANNER_HOME%/bin/sonar-scanner -Dsonar.projectName=Boardgame -Dsonar.projectKey=Boardgame \
+                 -Dsonar.java.binaries=."
+                }
+            }
+        }
+        
+        
+       
+       stage('Deploy to Artifact') {
+            steps {
+              withMaven(globalMavenSettingsConfig: 'global-settings', jdk: 'jdk', maven: 'maven3', mavenSettingsConfig: '', traceability: true) {
+                      bat "mvn deploy"     
+              }
+            }
+        }
+       
+            
+       
+        
     }
 }
