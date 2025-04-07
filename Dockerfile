@@ -1,11 +1,14 @@
-FROM adoptopenjdk/openjdk11 
-      
-EXPOSE 8080
+# Use nginx to serve static content
+FROM nginx:alpine
 
-ENV APP_HOME /usr/src/app
+# Remove the default nginx static files
+RUN rm -rf /usr/share/nginx/html/*
 
-COPY target/*.jar $APP_HOME/app.jar
+# Copy your HTML/CSS/JS into the nginx web root
+COPY . /usr/share/nginx/html
 
-WORKDIR $APP_HOME
+# Expose port 80
+EXPOSE 80
 
-CMD ["java", "-jar", "app.jar"]
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
